@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="CapIt turns your ideas into engaging social media captions in seconds." />
+    <title>CapIt - Your content. The perfect caption.</title>
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <meta property="og:image" content="https://bolt.new/static/og_default.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="logo" aria-label="CapIt home">CapIt</a>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <h1>Your content deserves the right words.</h1>
+        <p class="hero-sub">Turn your ideas into engaging social media captions in seconds with CapIt.</p>
+      </section>
+
+      <div class="layout">
+        <section class="card form-card" aria-labelledby="form-title">
+          <h2 id="form-title" class="card-title">Create a caption</h2>
+
+          <form id="caption-form" novalidate>
+            <div class="field">
+              <label for="description">Content description <span class="required" aria-hidden="true">*</span></label>
+              <textarea id="description" name="description" rows="4" maxlength="500" placeholder="A sunrise hike above the clouds with my dog"></textarea>
+              <p class="field-error" id="description-error" role="alert" hidden>Describe your content so CapIt can write a caption.</p>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="platform">Platform</label>
+                <select id="platform" name="platform">
+                  <option value="instagram">Instagram</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="x">X (Twitter)</option>
+                  <option value="facebook">Facebook</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="content-type">Content type</label>
+                <select id="content-type" name="contentType">
+                  <option value="photo">Photo</option>
+                  <option value="video">Video</option>
+                  <option value="reel">Reel or short</option>
+                  <option value="carousel">Carousel</option>
+                  <option value="story">Story</option>
+                  <option value="text">Text post</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="tone">Tone</label>
+                <select id="tone" name="tone">
+                  <option value="friendly">Friendly</option>
+                  <option value="professional">Professional</option>
+                  <option value="playful">Playful</option>
+                  <option value="inspirational">Inspirational</option>
+                  <option value="witty">Witty</option>
+                  <option value="bold">Bold</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="language">Language</label>
+                <select id="language" name="language">
+                  <option value="english">English</option>
+                  <option value="spanish">Spanish</option>
+                  <option value="french">French</option>
+                  <option value="german">German</option>
+                  <option value="portuguese">Portuguese</option>
+                </select>
+              </div>
+
+              <div class="field field-full">
+                <span class="field-label" id="length-label">Caption length</span>
+                <div class="segmented" role="radiogroup" aria-labelledby="length-label">
+                  <label class="segment">
+                    <input type="radio" name="length" value="short" />
+                    <span>Short</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="length" value="medium" checked />
+                    <span>Medium</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="length" value="long" />
+                    <span>Long</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="instructions">Additional instructions <span class="optional">(optional)</span></label>
+              <textarea id="instructions" name="instructions" rows="2" maxlength="300" placeholder="Mention our new spring collection and include a call to action"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="generate-btn">Generate Caption</button>
+          </form>
+        </section>
+
+        <section class="card result-card" aria-labelledby="result-title" aria-live="polite">
+          <div id="empty-state" class="empty-state">
+            <p class="empty-title">Your caption will appear here.</p>
+            <p class="empty-text">Fill in the details and generate a caption to get started.</p>
+          </div>
+
+          <div id="result" hidden>
+            <h2 id="result-title" class="card-title">Your caption is ready.</h2>
+
+            <label class="sr-only" for="caption-text">Generated caption</label>
+            <textarea id="caption-text" class="caption-text" rows="6" readonly></textarea>
+
+            <div class="result-actions">
+              <button type="button" class="btn btn-primary" id="copy-btn">Copy</button>
+              <button type="button" class="btn btn-secondary" id="edit-btn" aria-pressed="false">Edit</button>
+              <button type="button" class="btn btn-ghost" id="regenerate-btn">Regenerate</button>
+            </div>
+
+            <div class="alternatives" id="alternatives">
+              <h3 class="alternatives-title">Alternative captions</h3>
+              <ul id="alternatives-list" class="alternatives-list"></ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="assets/js/script.js"></script>
+  </body>
+</html>
