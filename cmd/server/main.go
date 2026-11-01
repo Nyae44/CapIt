@@ -1,6 +1,7 @@
 package main
 
 import (
+	"capit/internal/captions"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +30,15 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
+
+	// Initalize the caption generator
+	generator := captions.MockGenerator{}
+
+	// Initialize the caption handler.
+	captionHandler := captions.NewHandler(generator)
+
+	// Register the caption generation endpoint.
+	r.Post("/api/v1/captions/generate", captionHandler.Generate)
 
 	// Handle unknown routes.
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
