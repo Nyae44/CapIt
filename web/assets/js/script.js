@@ -1,3 +1,4 @@
+import { saveCaption } from "./storage.js";
 const form = document.querySelector("#caption-form");
 const descriptionInput = document.querySelector("#description");
 const descriptionField = descriptionInput.closest(".field");
@@ -145,6 +146,11 @@ async function runGeneration(button, idleLabel) {
   try {
     const captions = await generateCaptions(currentOptions);
     showResult(captions);
+    saveCaption({
+  content: captions[0],
+  platform: currentOptions.platform,
+  tone: currentOptions.tone
+});
   } catch {
     showToast("Something went wrong. Please try again.");
   } finally {
