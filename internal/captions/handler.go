@@ -3,6 +3,7 @@ package captions
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -95,6 +96,7 @@ func (h *Handler) Generate(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		log.Printf("Caption generation failed: %v", err)
 		http.Error(w,
 			`{"error":"failed to generate caption"}`,
 			http.StatusInternalServerError,

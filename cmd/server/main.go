@@ -2,15 +2,39 @@ package main
 
 import (
 	"capit/internal/captions"
+	"capit/internal/config"
+	"capit/internal/providers"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables.
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found; using environment variables")
+	}
+
+	// Load application configuration.
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initialize Gemini provider.
+	generator, err := providers.NewGeminiGenerator(
+		cfg.AI.GeminiAPIKey,
+		cfg.AI.Model,
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize Gemini: %v", err)
+	}
+
+	// Initialize router.
 	r := chi.NewRouter()
 
 	// Serve static assets.
@@ -19,25 +43,22 @@ func main() {
 
 	r.Handle("/assets/*", http.StripPrefix("/assets/", fileServer))
 
-	// Serve the frontend.
+	// Serve frontend.
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/index.html")
 	})
 
-	// Health-check endpoint.
+	// Health check.
 	r.Get("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Initalize the caption generator
-	generator := captions.MockGenerator{}
-
-	// Initialize the caption handler.
+	// Initialize caption handler with Gemini.
 	captionHandler := captions.NewHandler(generator)
 
-	// Register the caption generation endpoint.
+	// Register caption generation endpoint.
 	r.Post("/api/v1/captions/generate", captionHandler.Generate)
 
 	// Handle unknown routes.
@@ -45,15 +66,18 @@ func main() {
 		http.NotFound(w, r)
 	})
 
-	// Check that the frontend exists before starting.
+	// Check that frontend exists.
 	indexPath := filepath.Join("web", "index.html")
 	if _, err := os.Stat(indexPath); err != nil {
 		log.Fatalf("Frontend file not found at %s: %v", indexPath, err)
 	}
 
-	log.Println("CapIt is running at http://localhost:3000")
+	// Start server.
+	addr := ":" + cfg.Server.Port
 
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	log.Printf("CapIt is running at http://localhost%s", addr)
+
+	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatal(err)
 	}
 }
