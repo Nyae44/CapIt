@@ -1,350 +1,258 @@
+]
 # CapIt
 
 **Your content. The perfect caption.**
 
-CapIt is an AI-powered social media caption generator designed to help content creators, social media managers, digital marketers, photographers, and communication teams turn rough content descriptions into publish-ready captions.
+CapIt is an AI-powered social media caption generator designed to help content creators, businesses, photographers, and digital marketers create engaging captions for their social media posts.
 
-The project uses a lightweight frontend built with **HTML, CSS, and vanilla JavaScript**, backed by **Go**, `net/http`, and **Chi** for HTTP routing.
+By providing a topic, choosing a social media platform, and selecting a preferred tone, users can generate captions using Google's Gemini AI.
 
-## Goals
+## Features
 
-- Generate captions for different social media platforms.
-- Customize captions by content type, tone, language, and length.
-- Edit, copy, and regenerate captions.
-- Keep the frontend simple and responsive.
-- Keep AI provider credentials and integrations on the backend.
-- Build incrementally without unnecessary frameworks or dependencies.
+- **AI-powered caption generation:** Generate captions using Google's Gemini API.
+- **Multiple social media platforms:** Supports Instagram, Facebook, TikTok, and LinkedIn.
+- **Customizable tone:** Specify the tone that best suits your content.
+- **REST API:** Generate captions through a Go-powered HTTP API.
+- **Input validation:** Validate incoming requests and reject unsupported platforms.
+- **Local caption storage:** Save generated captions in the browser using localStorage.
+- **Mock generator:** Retain a mock implementation for development and testing.
 
 ## Technology Stack
 
-| Area | Technology |
+| Component | Technology |
 |---|---|
-| Frontend | HTML5, CSS3, vanilla JavaScript |
 | Backend | Go |
-| HTTP routing | Chi |
-| HTTP client/server communication | Fetch API and JSON |
-| Initial caption history | Browser `localStorage` |
-| Future database | PostgreSQL, when persistence is needed |
-| AI integration | Provider adapter behind a Go interface |
-
-Templ, HTMX, and Tailwind CSS are optional and are not required for the initial version.
+| HTTP Router | Chi |
+| AI Provider | Google Gemini |
+| AI SDK | Google GenAI Go SDK |
+| Frontend | HTML, CSS, JavaScript |
+| Configuration | Environment variables |
+| Browser Storage | localStorage |
+| Testing | Go testing package |
 
 ## Project Structure
 
 ```text
-capit/
+CapIt/
+│
 ├── cmd/
 │   └── server/
-│       └── main.go                 # Application entry point
+│       └── main.go
 │
 ├── internal/
+│   ├── captions/
+│   │   ├── handler.go
+│   │   ├── handler_test.go
+│   │   └── mock.go
+│   │
 │   ├── config/
-│   │   └── config.go               # Environment and application configuration
+│   │   └── config.go
 │   │
-│   ├── domain/
-│   │   └── caption.go              # Caption request/response data types
-│   │
-│   ├── handler/
-│   │   ├── caption.go              # Caption API handlers
-│   │   └── health.go               # Health-check endpoint
-│   │
-│   ├── service/
-│   │   └── caption.go              # Caption-generation business logic
-│   │
-│   ├── ai/
-│   │   ├── provider.go             # AI provider interface
-│   │   └── mock.go                 # Mock provider for development
-│   │
-│   ├── middleware/
-│   │   └── logging.go              # HTTP request logging
-│   │
-│   └── repository/
-│       └── caption.go              # Caption persistence (add when needed)
+│   └── providers/
+│       └── gemini.go
 │
 ├── web/
-│   ├── index.html                  # Main frontend page
-│   └── assets/
-│       ├── css/
-│       │   └── style.css           # Application styles
-│       ├── js/
-│       │   └── app.js              # Frontend interactions and API calls
-│       └── images/
-│           └── logo.svg            # CapIt logo
+│   ├── assets/
+│   │   ├── css/
+│   │   └── js/
+│   │
+│   └── index.html
 │
-├── migrations/                     # Database migrations (add when needed)
-├── .env.example                    # Example environment variables
+├── .env
 ├── .gitignore
 ├── go.mod
-├── go.sum
-└── README.md
+└── go.sum
 ```
 
-> Start with the files needed for the first working feature. Directories such as `repository/` and `migrations/` can be added when persistent storage is introduced.
+## Architecture Overview
 
-## Architecture
+CapIt follows a modular backend architecture.
 
-```text
-                         USER
-                          |
-                          v
-                 +-------------------+
-                 |     CapIt UI      |
-                 | index.html        |
-                 | style.css         |
-                 | app.js            |
-                 +---------+---------+
-                           |
-                           | HTTP + JSON
-                           v
-                 +-------------------+
-                 | Go HTTP Server    |
-                 | Chi Router        |
-                 +---------+---------+
-                           |
-                           v
-                 +-------------------+
-                 | HTTP Handlers     |
-                 +---------+---------+
-                           |
-                           v
-                 +-------------------+
-                 | Caption Service   |
-                 | Validation        |
-                 | Prompt preparation|
-                 | Generation logic  |
-                 +---------+---------+
-                           |
-                           v
-                 +-------------------+
-                 | AI Provider       |
-                 | Adapter/interface |
-                 +---------+---------+
-                           |
-                           v
-                 +-------------------+
-                 | AI Model or API   |
-                 +-------------------+
-```
+- **cmd/server:** Application entry point, environment loading, dependency initialization, routing, and HTTP server startup.
+- **internal/captions:** Caption request handling, input validation, response formatting, and the generator interface.
+- **internal/config:** Application configuration and environment variable management.
+- **internal/providers:** AI provider implementations, including the Gemini integration.
+- **web:** Frontend assets and user interface.
 
-### Request flow
+The application uses dependency injection to separate caption generation from HTTP request handling.
 
-1. The user enters a content description and selects caption options.
-2. `app.js` sends a JSON request to the Go API using the Fetch API.
-3. Chi routes the request to the relevant handler.
-4. The handler validates the request and calls the caption service.
-5. The service prepares the generation request and calls the configured AI provider.
-6. The handler returns the result as JSON.
-7. The frontend displays the caption so the user can edit or copy it.
+The `Generator` interface allows different implementations, such as the mock generator and Gemini generator, to be used interchangeably.
 
-The frontend should not depend on a particular AI provider. The Go backend owns provider integration so the provider can be changed without redesigning the UI.
+## Getting Started
 
-## Initial API
+### Prerequisites
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/` | Serves the CapIt frontend |
-| `GET` | `/assets/*` | Serves CSS, JavaScript, and images |
-| `GET` | `/api/v1/health` | Reports whether the backend is running |
-| `POST` | `/api/v1/captions/generate` | Generates a caption |
+Make sure you have installed:
 
-### Example request
+- Go
+- Git
+- A Google Gemini API key
+- A modern web browser
 
-`POST /api/v1/captions/generate`
-
-```json
-{
-  "content": "A community meeting discussing access to clean water.",
-  "platform": "Facebook",
-  "contentType": "Community Engagement",
-  "tone": "Professional",
-  "language": "English",
-  "length": "Short",
-  "instructions": "Keep it concise and engaging."
-}
-```
-
-### Example response
-
-```json
-{
-  "caption": "Building stronger communities starts with listening. Today, residents came together to discuss access to clean water and practical solutions for a healthier future."
-}
-```
-
-The API contract can be extended as the application grows, for example to return alternative captions or metadata.
-
-## Backend Responsibilities
-
-### `cmd/server/`
-
-Starts the application, loads configuration, sets up routes, and starts the HTTP server.
-
-### `internal/handler/`
-
-Handles HTTP concerns:
-- Decode incoming JSON.
-- Validate request structure.
-- Call the appropriate service.
-- Return consistent JSON responses and HTTP status codes.
-
-### `internal/service/`
-
-Contains caption-generation business logic:
-- Validate supported options.
-- Prepare the generation request.
-- Call the AI provider.
-- Handle service-level errors.
-
-### `internal/ai/`
-
-Contains the AI provider interface and implementations. A mock provider can be used to test the request-response flow before connecting a real model.
-
-Example interface:
-
-```go
-package ai
-
-import "context"
-
-type Provider interface {
-    GenerateCaption(ctx context.Context, prompt string) (string, error)
-}
-```
-
-### `internal/domain/`
-
-Defines core data types such as caption-generation requests and responses.
-
-### `internal/config/`
-
-Loads configuration from environment variables and applies safe defaults where appropriate.
-
-### `internal/middleware/`
-
-Holds shared HTTP middleware, such as request logging. Add middleware only when it serves a clear purpose.
-
-### `internal/repository/`
-
-Provides persistence when server-side caption history or user data is needed. It is not required for the initial prototype.
-
-## Frontend Responsibilities
-
-### `web/index.html`
-
-Provides the semantic HTML structure and form controls.
-
-### `web/assets/css/style.css`
-
-Contains responsive styling, layout, colors, spacing, and focus states.
-
-### `web/assets/js/app.js`
-
-Handles:
-- Form submission and validation.
-- Fetch requests to the Go API.
-- Loading, success, and error states.
-- Caption editing and copying.
-- Character counts.
-- Caption history in `localStorage`.
-- Regeneration and alternative captions when supported.
-
-Do not put AI provider API keys in frontend JavaScript or browser storage.
-
-## Development Roadmap
-
-### Stage 1: Working prototype
-
-- [ ] Create the HTML, CSS, and JavaScript frontend.
-- [ ] Set up the Go server and Chi router.
-- [ ] Serve the frontend from Go.
-- [ ] Implement `GET /api/v1/health`.
-- [ ] Implement `POST /api/v1/captions/generate`.
-- [ ] Add a mock AI provider.
-- [ ] Display, edit, and copy generated captions.
-- [ ] Store recent captions in browser `localStorage`.
-
-**Goal:** Prove that the frontend-to-backend flow works before spending money on an AI API.
-
-### Stage 2: Real AI integration
-
-- [ ] Implement a real AI provider behind the provider interface.
-- [ ] Load provider credentials from environment variables.
-- [ ] Add request timeouts and robust error handling.
-- [ ] Add suitable logging and basic rate limiting.
-- [ ] Test malformed requests, provider failures, and network errors.
-
-### Stage 3: Persistence and accounts
-
-When the product needs these features:
-
-- [ ] Add PostgreSQL.
-- [ ] Introduce database migrations.
-- [ ] Save caption history on the server.
-- [ ] Add authentication and authorization.
-- [ ] Add user-specific settings and usage limits.
-- [ ] Consider subscriptions and payments if the business model requires them.
-
-Avoid introducing a database, authentication, or payment features before the core caption-generation flow is reliable.
-
-## Configuration and Secrets
-
-Use `.env.example` to document the environment variables required for local development. Keep real secrets in a local environment file or a secrets manager, and ensure secret files are ignored by Git.
-
-For example, a future AI integration might need variables such as:
-
-```text
-PORT=3000
-AI_PROVIDER=
-AI_API_KEY=
-```
-
-These are illustrative configuration names. The application must explicitly load and validate whichever variables it actually uses. Never commit real API keys or expose them to the browser.
-
-## Running the Project
-
-The exact commands depend on the server setup implemented in `cmd/server/main.go`.
-
-A typical Go development workflow is:
-
-1. Install a supported Go version.
-2. Initialize the module if it has not already been created.
-3. Add Chi as a dependency if using Chi for routing.
-4. Implement the server and route setup.
-5. Start the server with `go run ./cmd/server`.
-6. Open the local address configured by the server, for example `http://localhost:3000`.
-
-Example setup commands for a new repository:
+### 1. Clone the repository
 
 ```bash
-go mod init example.com/capit
-go get github.com/go-chi/chi/v5
+git clone https://github.com/nyae44/CapIt.git
+cd CapIt
+```
+
+### 2. Install dependencies
+
+```bash
+go mod download
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file in the project root.
+
+```env
+PORT=3000
+APP_ENV=development
+
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=your_supported_gemini_model
+```
+
+Replace the placeholders with your actual Gemini API credentials and a model available to your account.
+
+**Security:** Never commit your `.env` file or expose your Gemini API key in frontend JavaScript.
+
+### 4. Run the application
+
+```bash
 go run ./cmd/server
 ```
 
-Replace `example.com/capit` with the module path you choose. If `go.mod` already exists, do not initialize it again.
+The application will be available at:
 
-## Design Principles
+```text
+http://localhost:3000
+```
 
-- **Keep it simple:** use vanilla HTML, CSS, and JavaScript.
-- **Separate responsibilities:** HTTP handling, business logic, and AI integration belong in different layers.
-- **Avoid premature complexity:** add packages and directories as real needs emerge.
-- **Keep provider credentials private:** all AI calls should go through the backend.
-- **Make failures clear:** show useful messages for validation, network, and provider errors.
-- **Build incrementally:** get one end-to-end feature working before adding more.
-- **Stay maintainable:** prefer readable Go code and small, focused functions.
+## API Documentation
 
-## Future Ideas
+### Health Check
 
-Possible features after the initial release:
+Check whether the application is running.
 
-- Multiple caption variations.
-- Platform-specific formatting.
-- English, Kiswahili, and Sheng support.
-- Tone and length presets.
-- Saved caption collections.
-- User accounts and cross-device history.
-- Usage limits and analytics.
+**Endpoint**
+
+```http
+GET /api/v1/health
+```
+
+**Response**
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### Generate Caption
+
+Generate a caption using the configured AI provider.
+
+**Endpoint**
+
+```http
+POST /api/v1/captions/generate
+```
+
+**Content-Type**
+
+```text
+application/json
+```
+
+**Request Body**
+
+```json
+{
+  "platform": "instagram",
+  "topic": "A beautiful coastal wedding in Kilifi",
+  "tone": "professional"
+}
+```
+
+**Supported Platforms**
+
+- Instagram
+- Facebook
+- TikTok
+- LinkedIn
+
+**Response**
+
+```json
+{
+  "caption": "Celebrate love, laughter, and unforgettable moments...",
+  "platform": "instagram"
+}
+```
+
+The generated caption will vary depending on the topic, platform, and selected tone.
+
+### Error Handling
+
+The API validates incoming requests and returns appropriate HTTP error responses.
+
+Examples include:
+
+- `400 Bad Request`: Invalid JSON, missing fields, or unsupported platform.
+- `500 Internal Server Error`: Caption generation failure.
+
+Detailed generation errors are logged on the backend rather than exposed to API clients.
+
+## Testing
+
+Run all project tests with:
+
+```bash
+go test ./...
+```
+
+The mock generator allows the caption handler to be tested without making actual requests to the Gemini API.
+
+## AI Integration
+
+CapIt uses Google's Gemini API through the official Go SDK.
+
+The backend communicates with Gemini to generate captions based on user-provided content.
+
+The AI provider is separated from the HTTP handler through the `Generator` interface, making it easier to introduce additional providers in the future.
+
+AI services may occasionally experience temporary availability issues or rate limits.
+
+## Development Roadmap
+
+- [ ] Complete frontend integration with the Go caption API.
+- [ ] Multiple caption variations per request.
+- [ ] Improve error handling and retry mechanisms.
+- [ ] Additional AI providers.
+- [ ] User authentication and accounts.
+- [ ] Cloud-based caption history.
+- [ ] Caption editing and regeneration.
+- [ ] Docker support.
+- [ ] Deployment to production infrastructure.
+
+## Contributing
+
+Contributions, ideas, bug reports, and suggestions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Run the tests.
+5. Submit a pull request.
 
 ## License
 
-Choose and add a license before distributing or accepting external contributions.
+A license has not yet been specified.
+
+---
+
+**CapIt**
+
+*Your content. The perfect caption.*
