@@ -1,4 +1,4 @@
-]
+
 # CapIt
 
 **Your content. The perfect caption.**
